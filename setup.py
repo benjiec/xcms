@@ -23,11 +23,11 @@ if sys.argv[1] not in ('egg_info',):
 
 setup(
     name='xcms',
-    version='1.93.2',
-    description='Update to 1.93.2 version of xcms',
+    version='1.93.2-ext',
+    description='Extensions and fixes to XCMS',
     author='Benjie Chen',
-    author_email='benjie@alum.mit.edu',
-    long_description=open('README.md', 'r').read(),
+    author_email='benjie@ginkgobioworks.com',
+    long_description=open('README', 'r').read(),
     packages=[],
     zip_safe=False,
     requires=[],
@@ -38,4 +38,3 @@ setup(
       'Topic :: Utilities'
     ],
 )
-

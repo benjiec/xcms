@@ -1,0 +1,34 @@
+
+XCMS Extensions and Fixes
+=========================
+
+Ginkgo Bioworks' version of XCMS. Originally "forked" from version 1.39.2 from
+Bioconductor (http://www.bioconductor.org/packages/devel/bioc/html/xcms.html).
+
+Main changes are 
+
+  1. centWave peak detection algorithm improvement.
+
+  With this change, XCMS now picks the best scale for a peak using CWT
+  coefficient, rather than fixed area integration. Using fixed area integration
+  tends to favor narrower peak shape, even though a broader peak shape is
+  better. To fine tune a broad peak, XCMS now narrows down the RT range of a
+  peak by skipping regions less than 1% of the max intensity, rather than
+  skipping regions with 0 intensities.
+
+
+
+Compile and Installation
+------------------------
+
+To install to ~/R, run ". install_xcms".
+
+Alternatively, you can run "python setup.py install" or include this repository
+in your Python project's requirements.txt file.
+
+To use this copy of the XCMS library, run the following in R (lib.loc specifies
+where package is installed).
+
+> library(xcms,lib.loc='~/R')
+
+or run R with the following environment variable: R_LIBS_USER=~/R
