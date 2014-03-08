@@ -1,1 +1,1 @@
-R CMD INSTALL .
+R CMD INSTALL -l ~/R .

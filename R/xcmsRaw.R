@@ -971,6 +971,7 @@ setMethod("findPeaks.centWave", "xcmsRaw", function(object, ppm=25, peakwidth=c(
                         ## Final S/N check
                         if (any(d[pp[dv]]- baseline >= sdthr)) {
                             ## try to decide which scale describes the peak best
+                            coef <- numeric(length(opp))
                             inti <- numeric(length(opp))
                             irange = rep(ceiling(scales[1]/2),length(opp))
                             for (k in 1:length(opp)) {
@@ -978,16 +979,24 @@ setMethod("findPeaks.centWave", "xcmsRaw", function(object, ppm=25, peakwidth=c(
                                 r1 <- ifelse(kpos-irange[k] > 1,kpos-irange[k],1)
                                 r2 <- ifelse(kpos+irange[k] < length(d),kpos+irange[k],length(d))
                                 inti[k] <- sum(d[r1:r2])
+                                if (dim(wCoefs)[2] >= k) { coef[k] <- wCoefs[opp[k],k] }
+                                else {
+                                    cat("Missing CWT coefficient for", scantime[td[opp[k]]], "scale", k, "\n");
+                                    coef[k] <- 0
+                                }
                             }
                             maxpi <- which.max(inti)
-                            if (length(maxpi) > 1) {
-                                m <- wCoefs[opp[maxpi],maxpi]
-                                bestcol <- which(m == max(m),arr=T)[2]
-                                best.scale.nr <- maxpi[bestcol]
-                            } else  best.scale.nr <- maxpi
+                            maxpc <- which.max(coef)
+                            if (length(maxpc) > 1) {
+                                # use the narrowest shape that fits the wavelet
+                                best.scale.nr <- maxpc[1]
+                            } else  best.scale.nr <- maxpc
 
                             best.scale <-  scales[best.scale.nr]
                             best.scale.pos <- opp[best.scale.nr]
+                            if (length(maxpi) > 1) {
+                                best.center <- opp[maxpi[1]]
+                            } else  best.center <- opp[maxpi]
 
                             pprange <- min(pp):max(pp)
                             ## maxint <- max(d[pprange])
@@ -1027,7 +1036,7 @@ setMethod("findPeaks.centWave", "xcmsRaw", function(object, ppm=25, peakwidth=c(
                                              td[best.scale.pos], td[lwpos], td[rwpos],  ## Peak positions guessed from the wavelet's (scan nr)
                                              NA,NA ))                    ## Peak limits (scan nr)
 
-                            peakinfo <- rbind(peakinfo,c(best.scale, best.scale.nr, best.scale.pos, lwpos, rwpos))  ## Peak positions guessed from the wavelet's
+                            peakinfo <- rbind(peakinfo,c(best.scale, best.scale.nr, best.scale.pos, lwpos, rwpos, best.center))  ## Peak positions guessed from the wavelet's
                         }
                     }
                 }
@@ -1039,23 +1048,31 @@ setMethod("findPeaks.centWave", "xcmsRaw", function(object, ppm=25, peakwidth=c(
         if (!is.null(peaks)) {
             colnames(peaks) <- c(basenames, verbosenames)
 
-            colnames(peakinfo) <- c("scale","scaleNr","scpos","scmin","scmax")
+            colnames(peakinfo) <- c("scale","scaleNr","scpos","scmin","scmax","scmid")
 
             for (p in 1:dim(peaks)[1]) {
-                ## find minima, assign rt and intensity values
+                ## assign rt and intensity values
                 if (integrate == 1) {
-                    lm <- descendMin(wCoefs[,peakinfo[p,"scaleNr"]], istart= peakinfo[p,"scpos"])
+                    ## descending with CWT coefficient to find minima
+                    lm <- descendMin(wCoefs[,peakinfo[p,"scaleNr"]], istart=peakinfo[p,"scpos"])
                     gap <- all(d[lm[1]:lm[2]] == 0) ## looks like we got stuck in a gap right in the middle of the peak
-                    if ((lm[1]==lm[2]) || gap )## fall-back
+                    pw_from_scale <- peakinfo[p,'scmax']-peakinfo[p,'scmin']
+                    lm_d <- lm[2]-lm[1]
+                    ## fall-back to descending with real data if we got stuck in a gap or
+                    ## if lm is much smaller than the peak width predicted by the best scale
+                    if (lm_d == 0 || lm_d < 0.8*pw_from_scale || gap)
                         lm <- descendMinTol(d, startpos=c(peakinfo[p,"scmin"], peakinfo[p,"scmax"]), maxDescOutlier)
                 } else
                     lm <- descendMinTol(d,startpos=c(peakinfo[p,"scmin"],peakinfo[p,"scmax"]),maxDescOutlier)
 
                 ## narrow down peak rt boundaries by skipping zeros
                 pd <- d[lm[1]:lm[2]]; np <- length(pd)
-                lm.l <-  xcms:::findEqualGreaterUnsorted(pd,1)
+                ## instead of skipping zeros, skip regions with weak intensities
+                maxo <- max(d[lm[1]:lm[2]])
+                mino <- 0.01*maxo
+                lm.l <- xcms:::findEqualGreaterUnsorted(pd,mino)
                 lm.l <- max(1, lm.l - 1)
-                lm.r <- xcms:::findEqualGreaterUnsorted(rev(pd),1)
+                lm.r <- xcms:::findEqualGreaterUnsorted(rev(pd),mino)
                 lm.r <- max(1, lm.r - 1)
                 lm <- lm + c(lm.l - 1, -(lm.r - 1) )
 
@@ -1095,8 +1112,7 @@ setMethod("findPeaks.centWave", "xcmsRaw", function(object, ppm=25, peakwidth=c(
                     ## avoid fitting side effects
                     if (peaks[p,"rt"] < peaks[p,"rtmin"])
                         peaks[p,"rt"] <- scantime[peaks[p,"scpos"]]
-                } else
-                    peaks[p,"rt"] <- scantime[peaks[p,"scpos"]]
+                } else peaks[p,"rt"] <- scantime[td[peakinfo[p,"scmid"]]] # capable of using center from a different scale than the scale selected to set peak width, depends on how scmid is set
             }
             peaks <- joinOverlappingPeaks(td,d,otd,omz,od,scantime,scan.range,peaks,maxGaussOverlap,mzCenterFun=mzCenterFun)
         }
