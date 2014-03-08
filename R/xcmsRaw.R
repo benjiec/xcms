@@ -1086,10 +1086,17 @@ setMethod("findPeaks.centWave", "xcmsRaw", function(object, ppm=25, peakwidth=c(
                 if (is.na(pwid))
                     pwid <- 1
 
-                peaks[p,"into"] <- pwid*sum(d[lm[1]:lm[2]])
+                # see https://groups.google.com/forum/#!topic/xcms-devel/bdkvPGSWOU0
+                # changing integration to account for non-uniform scan densities
+                irt <- scantime[peakrange[1]:peakrange[2]]
+                int <- d[lm[1]:lm[2]]
+                area <- sum(diff(irt)*sapply(2:length(int), function(x){mean(int[c(x-1, x)])}))
+                peaks[p, "into"] <- area
 
-                db <-  d[lm[1]:lm[2]] - baseline
-                peaks[p,"intb"] <- pwid*sum(db[db>0])
+                int_b <- d[lm[1]:lm[2]] - baseline
+                int_b[which(int_b < 0)] <- 0
+                area_b <- sum(diff(irt)*sapply(2:length(int_b), function(x){mean(int_b[c(x-1, x)])}))
+                peaks[p, "intb"] <- area_b
 
                 peaks[p,"lmin"] <- lm[1];
                 peaks[p,"lmax"] <- lm[2];
