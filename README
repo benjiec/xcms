@@ -9,21 +9,52 @@ Main changes are
 
   1. centWave peak detection algorithm improvement.
 
-  With this change, XCMS now picks the best scale for a peak using CWT
-  coefficient, rather than fixed area integration. Using fixed area integration
-  tends to favor narrower peak shape, even though a broader peak shape is
-  better. To fine tune a broad peak, XCMS now narrows down the RT range of a
-  peak by skipping regions less than 1% of the max intensity, rather than
-  skipping regions with 0 intensities.
+    With this change, XCMS now picks the best scale for a peak using CWT
+    coefficient, rather than fixed area integration. Using fixed area
+    integration tends to favor narrower peak shape, even though a broader peak
+    shape is better. To fine tune a broad peak, XCMS now narrows down the RT
+    range of a peak by skipping regions less than 1% of the max intensity,
+    rather than skipping regions with 0 intensities.
 
-  See commit 6b2a60d486
+    See commit 6b2a60d486
 
   2. centWave integration improvement.
 
-  Add Tony Larson's integration improvement, to handle non-uniform scan
-  densities. See https://groups.google.com/forum/#!topic/xcms-devel/bdkvPGSWOU0
+    Add Tony Larson's integration improvement, to handle non-uniform scan
+    densities. See https://groups.google.com/forum/#!topic/xcms-devel/bdkvPGSWOU0
 
-  See commit 21dbf6e7da
+    See commit 21dbf6e7da
+
+  3. Add targeted peak detection to centWave.
+
+    Prior to this change, XCMS does not pickup weak peaks consistently or at
+    all. I believe XCMS fails to pickup these peaks for three reasons.
+
+    1) XCMS tries to identify "regions of interest" (ROI) prior to peak
+    detection and integration. It may fail to pick up a weak peak with only a
+    few spikes spanning several scans as an ROI.
+
+    2) XCMS can only pick up ROIs with contiguous scans. This was mentioned in
+    the centWave peak detection paper, and correlates with behavior of the
+    code. To handle weak peaks with scan gaps, XCMS extends each ROI laterally
+    (in time domain) by a multiple of the specified minimum peak width, prior
+    to running peak detection on the ROI. But if the specified minimum peak
+    width is small, this lateral extension may not pick up all the scans that
+    make up the real peak.
+
+    3) XCMS throws away an ROI if it believes there aren't enough above-noise
+    signals in the ROI. XCMS determines the noise level locally, from an
+    average of the signals in the ROI. For weak peaks, real signals can be
+    considered as noise, causing an ROI with weak peak to be thrown away before
+    peak detection.
+
+    Targeted peak detection using XCMS works around all three of these
+    problems. First, each target is defined as a triple (mz range, scan range,
+    peak width range). Then, for each target, construct manually an ROI
+    covering the mz and scan ranges of the target. Finally, run CWT peak
+    detection on that ROI, using the target peak width range. CWT peak
+    detection works over large scan ranges and can pick up multiple peaks
+    within the scan range.
 
 
 
