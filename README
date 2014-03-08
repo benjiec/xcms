@@ -18,6 +18,13 @@ Main changes are
 
   See commit 6b2a60d486
 
+  2. centWave integration improvement.
+
+  Add Tony Larson's integration improvement, to handle non-uniform scan
+  densities. See https://groups.google.com/forum/#!topic/xcms-devel/bdkvPGSWOU0
+
+  See commit 21dbf6e7da
+
 
 
 Compile and Installation
