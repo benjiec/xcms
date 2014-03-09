@@ -972,20 +972,17 @@ setMethod("findPeaks.centWave", "xcmsRaw", function(object, ppm=25, peakwidth=c(
                         if (any(d[pp[dv]]- baseline >= sdthr)) {
                             ## try to decide which scale describes the peak best
                             coef <- numeric(length(opp))
-                            inti <- numeric(length(opp))
                             irange = rep(ceiling(scales[1]/2),length(opp))
                             for (k in 1:length(opp)) {
                                 kpos <- opp[k]
                                 r1 <- ifelse(kpos-irange[k] > 1,kpos-irange[k],1)
                                 r2 <- ifelse(kpos+irange[k] < length(d),kpos+irange[k],length(d))
-                                inti[k] <- sum(d[r1:r2])
                                 if (dim(wCoefs)[2] >= k) { coef[k] <- wCoefs[opp[k],k] }
                                 else {
                                     cat("Missing CWT coefficient for", scantime[td[opp[k]]], "scale", k, "\n");
                                     coef[k] <- 0
                                 }
                             }
-                            maxpi <- which.max(inti)
                             maxpc <- which.max(coef)
                             if (length(maxpc) > 1) {
                                 # use the narrowest shape that fits the wavelet
@@ -994,9 +991,7 @@ setMethod("findPeaks.centWave", "xcmsRaw", function(object, ppm=25, peakwidth=c(
 
                             best.scale <-  scales[best.scale.nr]
                             best.scale.pos <- opp[best.scale.nr]
-                            if (length(maxpi) > 1) {
-                                best.center <- opp[maxpi[1]]
-                            } else  best.center <- opp[maxpi]
+                            best.center <- best.scale.pos
 
                             pprange <- min(pp):max(pp)
                             ## maxint <- max(d[pprange])
