@@ -872,7 +872,7 @@ setMethod("centWaveOnROI", "xcmsRaw", function(object, scanrange, basenames, ver
         if (N >= 10*minPeakWidth)  ## in case of very long mass trace use full scan range for baseline detection
             noised <- rawEIC(object,mzrange=mzrange,scanrange=scanrange)$intensity
         else
-            noised <- d;
+            noised <- d
         ## 90% trimmed mean as first baseline guess
         noise <- estimateChromNoise(noised, trim=0.05, minPts=3*minPeakWidth)
 
@@ -1014,8 +1014,10 @@ setMethod("centWaveOnROI", "xcmsRaw", function(object, scanrange, basenames, ver
                     gap <- all(d[lm[1]:lm[2]] == 0) ## looks like we got stuck in a gap right in the middle of the peak
                     if ((lm[1]==lm[2]) || gap )## fall-back
                         lm <- descendMinTol(d, startpos=c(peakinfo[p,"scmin"], peakinfo[p,"scmax"]), maxDescOutlier)
-                } else
+                } else if (integrate == 2)
                     lm <- descendMinTol(d,startpos=c(peakinfo[p,"scmin"],peakinfo[p,"scmax"]),maxDescOutlier)
+                else
+                    lm <- c(peakinfo[p,"scmin"], peakinfo[p,"scmax"])
 
                 ## narrow down peak rt boundaries by skipping zeros
                 pd <- d[lm[1]:lm[2]]; np <- length(pd)
@@ -1071,7 +1073,7 @@ setMethod("centWaveOnROI", "xcmsRaw", function(object, scanrange, basenames, ver
                     ## avoid fitting side effects
                     if (peaks[p,"rt"] < peaks[p,"rtmin"])
                         peaks[p,"rt"] <- scantime[peaks[p,"scpos"]]
-                } else peaks[p,"rt"] <- scantime[td[peakinfo[p,"scmid"]]] # uses center from a different scale than the scale selected to set peak width
+                } else peaks[p,"rt"] <- scantime[td[peakinfo[p,"scmid"]]]
             }
             peaks <- joinOverlappingPeaks(td,d,otd,omz,od,scantime,scan.range,peaks,maxGaussOverlap,mzCenterFun=mzCenterFun)
         }
