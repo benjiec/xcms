@@ -1016,11 +1016,22 @@ setMethod("centWaveOnROI", "xcmsRaw", function(object, scanrange, basenames, ver
                         lm <- descendMinTol(d, startpos=c(peakinfo[p,"scmin"], peakinfo[p,"scmax"]), maxDescOutlier)
                 } else if (integrate == 2)
                     lm <- descendMinTol(d,startpos=c(peakinfo[p,"scmin"],peakinfo[p,"scmax"]),maxDescOutlier)
-                else
+                else {
                     lm <- c(peakinfo[p,"scmin"], peakinfo[p,"scmax"])
+		    # narrow rt range down by skipping regions less than 10% of
+		    # max at each end, considering those as trailing noise
+                    maxo <- max(d[lm[1]:lm[2]])
+                    pd <- d[lm[1]:lm[2]];
+                    mino <- 0.1*maxo
+                    lm.l <- xcms:::findEqualGreaterUnsorted(pd,mino)
+                    lm.l <- max(1, lm.l-1)
+                    lm.r <- xcms:::findEqualGreaterUnsorted(rev(pd),mino)
+                    lm.r <- max(1, lm.r-1)
+                    lm <- lm + c(lm.l-1, -(lm.r-1))
+                }
 
                 ## narrow down peak rt boundaries by skipping zeros
-                pd <- d[lm[1]:lm[2]]; np <- length(pd)
+                pd <- d[lm[1]:lm[2]];
                 ## instead of skipping zeros, skip regions with weak intensities
                 maxo <- max(d[lm[1]:lm[2]])
                 mino <- 0.01*maxo

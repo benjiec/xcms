@@ -7,7 +7,7 @@ Bioconductor (http://www.bioconductor.org/packages/devel/bioc/html/xcms.html).
 
 Main changes are 
 
-  1. centWave peak detection algorithm improvement.
+  1. Improved centWave peak detection 
 
     With this change, XCMS now picks the best scale for a peak using CWT
     coefficient, rather than fixed area integration. Using fixed area
@@ -18,14 +18,14 @@ Main changes are
 
     See commit 7a12243565
 
-  2. centWave integration improvement.
+  2. Improved centWave peak integration
 
     Add Tony Larson's integration improvement, to handle non-uniform scan
     densities. See https://groups.google.com/forum/#!topic/xcms-devel/bdkvPGSWOU0
 
     See commit 1980288a05
 
-  3. Add targeted peak detection to centWave.
+  3. Added targeted peak detection to centWave.
 
     Prior to this change, XCMS does not pickup weak peaks consistently or at
     all. I believe XCMS fails to pickup these peaks for three reasons.
@@ -48,26 +48,33 @@ Main changes are
     real detector noise, real signals can be considered as noise, causing an
     ROI with weak peak to be thrown away before peak detection.
 
-    "targeted centWave" works around all three of these problems. First, user
-    defines each target as a triple (mz range, scan range, peak width range)
-    and provides a target list to centWave. Second, for each target, "targeted
-    centWave" constructs an ROI that covers the mz and scan ranges of the
-    target, and runs CWT peak detection on that ROI, using the peak width range
-    of the target. CWT peak detection works over large scan ranges and can pick
-    up multiple peaks within the scan range. Third, for each detected peak,
-    instead of walking down from detected peak center to find RT boundaries and
-    integrating between the boundaries, "targeted centWave" uses the peak shape
-    with the best CWT coefficient to compute RT boundaries and integrates
-    between those boundaries. This last integration techique (integrate=3
-    option to centWave) also works when running centWave in untargeted mode.
-    Finally, in targeted mode, user can set snthresh=1 for peak detection,
-    bypassing centWave's noise estimation code; because user also specifies the
-    optimal peak width for the target, all peaks matching the peak width are
-    returned, regardless of the computed signal to noise ratio.
+    "targeted centWave" works around all three of these problems. 
+    
+    A) User defines each target as a triple (mz range, scan range, peak width
+    range) and provides a target list to centWave.
+    
+    B) For each target, "targeted centWave" constructs an ROI that covers the
+    mz and scan ranges of the target, and runs CWT peak detection on that ROI,
+    using the peak width range of the target. CWT peak detection works over
+    large scan ranges and can pick up multiple peaks within the scan range. 
+    
+    C) For each detected peak, instead of walking down from detected peak
+    center to find RT boundaries and integrating between the boundaries,
+    "targeted centWave" uses the peak shape with the best CWT coefficient to
+    compute RT boundaries, removing regions less than 10% of max intensity at
+    each end to remove trailing noise. This last integration techique
+    (integrate=3 option to centWave) also works when running centWave in
+    untargeted mode.  
+    
+    D) Finally, in targeted mode, user can set snthresh=1 for peak detection,
+    bypassing centWave's noise estimation code. Because user also specifies the
+    optimal peak width for the target, only and all peaks matching those
+    optimal peak width are returned, regardless of the computed signal to noise
+    ratio.
 
 
-Compile and Installation
-------------------------
+Compile and Use
+---------------
 
 To install to ~/R, run ". install_xcms".
 
