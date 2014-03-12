@@ -25,7 +25,7 @@ Main changes are
 
     See commit 1980288a05
 
-  3. Added targeted peak detection to centWave.
+  3. Added targeted peak detection to centWave
 
     Prior to this change, XCMS does not pickup weak peaks consistently or at
     all. I believe XCMS fails to pickup these peaks for three reasons.
