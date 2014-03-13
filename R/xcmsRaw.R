@@ -1018,8 +1018,8 @@ setMethod("centWaveOnROI", "xcmsRaw", function(object, scanrange, basenames, ver
                     lm <- descendMinTol(d,startpos=c(peakinfo[p,"scmin"],peakinfo[p,"scmax"]),maxDescOutlier)
                 else {
                     lm <- c(peakinfo[p,"scmin"], peakinfo[p,"scmax"])
-		    # narrow rt range down by skipping regions less than 10% of
-		    # max at each end, considering those as trailing noise
+                    # narrow rt range down by skipping regions less than 10% of
+                    # max at each end, considering those as trailing noise
                     maxo <- max(d[lm[1]:lm[2]])
                     pd <- d[lm[1]:lm[2]];
                     mino <- 0.1*maxo
