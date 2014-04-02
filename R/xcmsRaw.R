@@ -858,11 +858,11 @@ setMethod("centWaveOnROI", "xcmsRaw", function(object, scanrange, basenames, ver
         mzROI.EIC <- rawEIC(object,mzrange=mzrange,scanrange=scrange)
         omz <- rawMZ(object,mzrange=mzrange,scanrange=scrange)
         if (all(omz == 0))
-            stop("centWave: debug me: (omz == 0)?\n")
+            return (peaks)
         od  <- mzROI.EIC$intensity
         otd <- mzROI.EIC$scan
         if (all(od == 0))
-            stop("centWave: debug me: (all(od == 0))?\n")
+            return (peaks)
 
         ##  scrange + scRangeTol, used for gauss fitting and continuous data above 1st baseline detection
         ftd <- max(td[1], scrange[1] - scRangeTol) : min(td[length(td)], scrange[2] + scRangeTol)
