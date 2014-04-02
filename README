@@ -72,6 +72,8 @@ Main changes are
     optimal peak width are returned, regardless of the computed signal to noise
     ratio.
 
+    See commit 8ca593a551
+
 
 Compile and Use
 ---------------
