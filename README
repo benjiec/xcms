@@ -89,3 +89,10 @@ where package is installed).
 > library(xcms,lib.loc='~/R')
 
 or run R with the following environment variable: R_LIBS_USER=~/R
+
+
+Acknowledgment
+--------------
+
+We at Ginkgo Bioworks are indebted to the XCMS team for creating and improving
+XCMS over the years.
