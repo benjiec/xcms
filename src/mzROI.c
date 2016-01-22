@@ -353,6 +353,12 @@ int i,p,del=0;
  return(mzROI);
 }
 
+static int compareScan(const void *a, const void *b) {
+    struct scanStruct *aa = (struct scanStruct *)a;
+    struct scanStruct *bb = (struct scanStruct *)b;
+    return (aa->mz < bb->mz) ? -1 : ((aa->mz > bb->mz) ? 1 : 0);
+}
+
 struct scanBuf * getScan(int scan, double *pmz, double *pintensity, int *pscanindex,int nmz, int lastScan, struct scanBuf *scanbuf) {
     int idx,idx1,idx2,i=0,N=0;
     idx1 =  pscanindex[scan -1] +1;
@@ -373,12 +379,19 @@ struct scanBuf * getScan(int scan, double *pmz, double *pintensity, int *pscanin
 
         scanbuf->thisScanLength=N;
 
+        double fMass = -1;
+        int mustSort = FALSE;
         for (idx=idx1;idx <= idx2; idx++)
         {
           scanbuf->thisScan[i].mz       = pmz[idx-1];
           scanbuf->thisScan[i].intensity = pintensity[idx-1];
+          mustSort = mustSort || (scanbuf->thisScan[i].mz < fMass);
+          fMass = scanbuf->thisScan[i].mz;
           i++;
         }
+
+        if (mustSort)
+            qsort(scanbuf->thisScan, N, sizeof(scanbuf->thisScan[0]), compareScan);
     } else
     {
         scanbuf->thisScan = NULL;
