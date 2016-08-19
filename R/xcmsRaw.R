@@ -817,7 +817,8 @@ setMethod("centWaveOnROI", "xcmsRaw", function(object, scanrange, basenames, ver
                                                roi, roi_index, peakwidth=c(20,50), snthresh=10,
                                                mzCenterFun="wMean",
                                                integrate=1, fitgauss=FALSE,
-                                               verbose.columns=FALSE, targeted=FALSE, sleep=0) {
+                                               verbose.columns=FALSE, targeted=FALSE, sleep=0,
+                                               scale_step=2, min_pts_above_baseline=4) {
 
     ## Peak width: seconds to scales
     scalerange <- round((peakwidth / mean(diff(object@scantime))) / 2)
@@ -829,13 +830,13 @@ setMethod("centWaveOnROI", "xcmsRaw", function(object, scanrange, basenames, ver
         stop("No scales ? Please check peak width!\n")
 
     if (length(scalerange) > 1)
-        scales <- seq(from=scalerange[1], to=scalerange[2], by=2)  else
+        scales <- seq(from=scalerange[1], to=scalerange[2], by=scale_step)  else
     scales <- scalerange;
 
     minPeakWidth <- scales[1];
     noiserange <- c(minPeakWidth*3, max(scales)*3);
     maxGaussOverlap <- 0.5;
-    minPtsAboveBaseLine <- max(4,minPeakWidth-2);
+    minPtsAboveBaseLine <- max(min_pts_above_baseline,minPeakWidth-2);
     minCentroids <- minPtsAboveBaseLine ;
     scRangeTol <- maxDescOutlier <- floor(minPeakWidth/2);
 
@@ -1137,7 +1138,9 @@ setMethod("findPeaks.centWave", "xcmsRaw", function(object, ppm=25, peakwidth=c(
                                                     integrate=1, mzdiff=-0.001,
                                                     fitgauss=FALSE, scanrange=numeric(), noise=0, ## noise.local=TRUE,
                                                     targets=NULL,
-                                                    sleep=0, verbose.columns=FALSE, ROI.list=list()) {
+                                                    sleep=0, verbose.columns=FALSE, ROI.list=list(),
+                                                    scale_step=2,
+                                                    min_pts_above_baseline=4) {
     if (!isCentroided(object))
         warning("It looks like this file is in profile mode. centWave can process only centroid mode data !\n")
 
@@ -1250,7 +1253,7 @@ setMethod("findPeaks.centWave", "xcmsRaw", function(object, ppm=25, peakwidth=c(
     else if (length(roi_list) == 0) {
         cat("\n Detecting mass traces at", ppm, "ppm ... \n"); flush.console();
         roi_list <- findmzROI(object, scanrange=scanrange,
-                              dev=ppm*1e-6, minCentroids=4, prefilter=prefilter, noise=noise)
+                              dev=ppm*1e-6, minCentroids=min_pts_above_baseline, prefilter=prefilter, noise=noise)
         if (length(roi_list) == 0) {
             cat("No ROIs found ! \n")
             if (verbose.columns) {
@@ -1304,7 +1307,8 @@ setMethod("findPeaks.centWave", "xcmsRaw", function(object, ppm=25, peakwidth=c(
                                feat, f, peakwidth=peakwidth, snthresh=snthresh,
                                mzCenterFun=mzCenterFun, integrate=integrate, fitgauss=fitgauss,
                                verbose.columns=verbose.columns,
-                               targeted=targeted, sleep=sleep)
+                               targeted=targeted, sleep=sleep, scale_step=scale_step,
+                               min_pts_above_baseline=min_pts_above_baseline)
         if (!is.null(peaks)) {
             peaklist[[length(peaklist)+1]] <- peaks
         }
